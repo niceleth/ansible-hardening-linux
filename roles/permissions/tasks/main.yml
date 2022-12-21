@@ -1,0 +1,39 @@
+    - name: Include OS specific variables.
+      include_vars: "{{ ansible_distribution }}.yml"
+
+    - name: Lister les repertoires home
+      ansible.builtin.find:
+        paths: "{{ homepath }}"
+        file_type: directory
+      register: filelist
+
+    - name: Change permissions
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        mode: "0700"
+      with_items: "{{ filelist.files }}"
+
+    - name: Application permissions diretories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: root
+        group: root
+        mode: '0700'
+      with_items: "{{ dir }}"
+
+    - name: Application permissions 600
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: root
+        group: root
+        mode: '0600'
+      with_items: "{{ files600 }}"
+
+    - name: Application permissions 644
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: root
+        group: root
+        mode: '0644'
+      with_items: "{{ files644 }}"

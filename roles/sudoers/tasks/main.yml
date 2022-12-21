@@ -1,0 +1,7 @@
+    - name: Changements sudoers
+      ansible.builtin.template:
+        src: sudoers.j2
+        dest: /etc/sudoers
+        validate: /usr/sbin/visudo -cf %s
+        mode: 0600
+        force: yes

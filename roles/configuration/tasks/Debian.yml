@@ -1,0 +1,14 @@
+    - name: Configuration firewall nft
+      ansible.builtin.template:
+        src: nftables.conf.j2
+        dest: /etc/nftables.conf
+        force: yes
+        mode: '0600'
+      register: nftables
+
+    - name: Restart nftables
+      ansible.builtin.service:
+        name: nftables
+        state: restarted
+        enabled: yes
+      when: nftables.changed  

@@ -1,0 +1,15 @@
+      dir:
+        - '/etc/cron.d'
+        - '/etc/cron.daily'
+        - '/etc/cron.hourly'
+        - '/etc/cron.weekly'
+        - '/etc/cron.monthly'
+      files600:
+        - '/boot/grub/grub.cfg'
+        - '/etc/ssh/sshd_config'
+        - '/etc/crontab'
+      files644:
+        - '/etc/passwd-'
+        - '/etc/group-'
+      homepath: '/home'
+    

@@ -1,0 +1,15 @@
+---
+-
+  become: "true"
+  become_method: su
+  remote_user: ansible_user
+  debugger: never
+  gather_facts: "yes"
+  hosts: all
+  roles:
+    - packages
+    - permissions
+    - configuration
+    - sysctl
+    - sudoers
+    - ssh

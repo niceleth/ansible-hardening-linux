@@ -1,0 +1,79 @@
+    - name: Configuration faillock
+      ansible.builtin.template:
+        src: faillock.conf.j2
+        dest: /etc/security/faillock.conf
+        mode: '0600'
+        force: yes
+
+    - name: Configuration auditd
+      ansible.builtin.template:
+        src: anssi.rules.j2
+        dest: /etc/audit/rules.d/annsi.rules
+        force: yes
+        mode: '0600'
+      register: auditd
+
+    - name: Restart auditd
+      ansible.builtin.service:
+        name: auditd
+        state: restarted
+        enabled: yes
+      when: auditd.changed
+
+    - name: Core dumps
+      ansible.builtin.blockinfile:
+        path: /etc/security/limits.conf
+        marker: "#--{mark} ANSIBLE MANAGED BLOCK --"
+        insertafter: "#@student"
+        block: |
+          * soft core 0
+          * hard core 0
+
+    - name: Demarrage sysstat
+      ansible.builtin.lineinfile:
+        path: /etc/default/sysstat
+        regexp: '^ENABLED='
+        line: ENABLED="true"
+
+    - name: Blacklist modules non voulus
+      ansible.builtin.template:
+        src: blacklist-modules.conf.j2
+        dest: /etc/modprobe.d/blacklist-modules.conf
+        mode: '0600'
+        force: yes
+
+    - name: Force UMASK login.defs
+      ansible.builtin.lineinfile:
+        path: /etc/login.defs
+        regexp: '^UMASK'
+        line: 'UMASK           027'
+
+    - name: Changement politique pam pwquality 
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/common-password
+        regexp: '^password.*requisite.*pam_pwquality.so'
+        line: 'password        requisite                       pam_pwquality.so retry=3 minlen=16 difok=3 lcredit=-1 ucredit=-1 dcredit=-1 ocredit=-1 reject_username enforce_for_root'
+
+    - name: Changement politique pam rounds
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/common-password
+        regexp: '^password.*\[success=1 default=ignore\].*pam_unix.so obscure use_authtok try_first_pass yescrypt'
+        line: 'password        [success=1 default=ignore]      pam_unix.so use_authtok try_first_pass yescrypt obscure sha512  rounds=65536'
+
+    - name: Ajout module faillock dans pam account
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/common-account
+        insertafter: '^account.*requisite.*pam_deny.so'
+        line: 'account  required                       pam_faillock.so'
+        state: present
+
+    - name: Ajout module faillock dans pam auth
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/common-auth
+        insertafter: '^#.*pam-auth-update\(8\).*for.*details.'
+        line: 'auth     required       pam_faillock.so preauth'
+        state: present
+
+    - name: Install the correct web server for Debian
+      import_tasks: Debian.yml
+      when: ansible_distribution == "Debian"
